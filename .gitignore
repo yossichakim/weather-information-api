@@ -28,3 +28,10 @@ Thumbs.db
 # IDE settings
 .vscode/
 .idea/
+/generated/prisma
+
+# Local SQLite database
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
