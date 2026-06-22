@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenAPI Contract"
+  short_description: "Maintain the Express OpenAPI 3.1 contract"
+  default_prompt: "Use $openapi-contract to create or maintain the verified Express API documentation contract."

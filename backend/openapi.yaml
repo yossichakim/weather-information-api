@@ -1,0 +1,852 @@
+openapi: 3.1.0
+info:
+  title: Weather Information API
+  version: 1.0.0
+  description: |
+    REST API for current weather lookup and authenticated weather-related task
+    management. Authenticated operations use short-lived bearer JWTs. Logging
+    out revokes the presented token.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+tags:
+  - name: Health
+  - name: Authentication
+  - name: Weather
+  - name: Tasks
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      operationId: getHealth
+      summary: Check API health
+      responses:
+        "200":
+          description: The API process is running.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: success
+                message: Weather Information API is running
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      operationId: registerUser
+      summary: Register a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            example:
+              email: weather.user@example.com
+              password: StrongPassword123
+      responses:
+        "201":
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                status: success
+                data:
+                  user:
+                    id: 1
+                    email: weather.user@example.com
+                    createdAt: "2026-06-22T12:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/EmailConflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      operationId: loginUser
+      summary: Log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: weather.user@example.com
+              password: StrongPassword123
+      responses:
+        "200":
+          description: Credentials accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              example:
+                status: success
+                data:
+                  user:
+                    id: 1
+                    email: weather.user@example.com
+                    createdAt: "2026-06-22T12:00:00.000Z"
+                  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example.signature
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          description: The email or password is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                message: Invalid email or password
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      operationId: getCurrentUser
+      summary: Get the authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                status: success
+                data:
+                  user:
+                    id: 1
+                    email: weather.user@example.com
+                    createdAt: "2026-06-22T12:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/auth/logout:
+    delete:
+      tags:
+        - Authentication
+      operationId: logoutUser
+      summary: Log out and revoke the current token
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: The presented access token was revoked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+              example:
+                status: success
+                message: Logged out successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/weather/current:
+    get:
+      tags:
+        - Weather
+      operationId: getCurrentWeather
+      summary: Get current weather by city
+      parameters:
+        - name: city
+          in: query
+          required: true
+          description: City name passed to the weather provider after trimming.
+          schema:
+            type: string
+            minLength: 1
+          example: London
+      responses:
+        "200":
+          description: Current weather for the resolved city.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeatherResponse"
+              example:
+                status: success
+                data:
+                  city: London
+                  state: England
+                  country: GB
+                  coordinates:
+                    latitude: 51.5074
+                    longitude: -0.1278
+                  temperature:
+                    current: 18.4
+                    feelsLike: 18.1
+                    minimum: 17.2
+                    maximum: 19.3
+                    unit: celsius
+                  humidity:
+                    value: 72
+                    unit: percent
+                  conditions:
+                    main: Clouds
+                    description: broken clouds
+                  wind:
+                    speed: 4.1
+                    unit: meters_per_second
+        "400":
+          description: The required city query parameter is missing or empty.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: fail
+                message: The city query parameter is required
+        "404":
+          $ref: "#/components/responses/CityNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "502":
+          $ref: "#/components/responses/WeatherProviderError"
+  /api/tasks:
+    get:
+      tags:
+        - Tasks
+      operationId: listTasks
+      summary: List the authenticated user's tasks
+      description: |
+        Returns only tasks owned by the authenticated user, ordered newest
+        first. Filters may be used separately or together.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Case-insensitive task status. Accepted values are pending and checked.
+          schema:
+            type: string
+          examples:
+            pending:
+              value: pending
+            checked:
+              value: checked
+        - name: category
+          in: query
+          required: false
+          description: Exact category match after surrounding whitespace is trimmed.
+          schema:
+            type: string
+          example: travel
+      responses:
+        "200":
+          description: Matching tasks owned by the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskListResponse"
+              example:
+                status: success
+                results: 1
+                data:
+                  tasks:
+                    - id: 7
+                      title: Check weather for London
+                      description: Check current conditions before departure
+                      city: London
+                      category: travel
+                      status: PENDING
+                      createdAt: "2026-06-22T12:30:00.000Z"
+                      updatedAt: "2026-06-22T12:30:00.000Z"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Tasks
+      operationId: createTask
+      summary: Create a task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskRequest"
+            example:
+              title: Check weather for London
+              description: Check current conditions before departure
+              city: London
+              category: travel
+      responses:
+        "201":
+          description: Task created for the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+              example:
+                status: success
+                data:
+                  task:
+                    id: 7
+                    title: Check weather for London
+                    description: Check current conditions before departure
+                    city: London
+                    category: travel
+                    status: PENDING
+                    createdAt: "2026-06-22T12:30:00.000Z"
+                    updatedAt: "2026-06-22T12:30:00.000Z"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/tasks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+    get:
+      tags:
+        - Tasks
+      operationId: getTaskById
+      summary: Get one owned task
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Task owned by the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/TaskNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - Tasks
+      operationId: updateTask
+      summary: Update one owned task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+            example:
+              title: Check updated weather for London
+              status: checked
+              category: daily
+      responses:
+        "200":
+          description: Updated task owned by the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/TaskNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Tasks
+      operationId: deleteTask
+      summary: Delete one owned task
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Task deleted successfully. The response has no body.
+        "400":
+          $ref: "#/components/responses/InvalidTaskId"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/TaskNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token returned by `POST /api/auth/login`.
+  parameters:
+    TaskId:
+      name: id
+      in: path
+      required: true
+      description: Positive integer task identifier.
+      schema:
+        type: integer
+        minimum: 1
+      example: 7
+  responses:
+    ValidationError:
+      description: The request failed validation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            missingEmailOrPassword:
+              value:
+                status: fail
+                message: Email and password are required
+            shortPassword:
+              value:
+                status: fail
+                message: Password must contain at least 8 characters
+            invalidTaskStatus:
+              value:
+                status: fail
+                message: Status must be pending or checked
+    InvalidTaskId:
+      description: The task ID is not a positive integer.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: fail
+            message: Task ID must be a positive integer
+    Unauthorized:
+      description: A bearer token is missing, invalid, expired, revoked, or belongs to a deleted user.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            missing:
+              value:
+                status: fail
+                message: Authentication token is required
+            invalidOrExpired:
+              value:
+                status: fail
+                message: Authentication token is invalid or expired
+            revoked:
+              value:
+                status: fail
+                message: Authentication token has been revoked
+    TaskNotFound:
+      description: The task does not exist or is not owned by the authenticated user.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: fail
+            message: Task not found
+    CityNotFound:
+      description: The weather provider did not resolve the requested city.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: error
+            message: City not found
+    EmailConflict:
+      description: A user with the normalized email address already exists.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: error
+            message: Email is already registered
+    InternalServerError:
+      description: The server could not complete the request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: error
+            message: Internal server error
+    WeatherProviderError:
+      description: An upstream weather-provider request failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            location:
+              value:
+                status: error
+                message: Failed to retrieve location data
+            weather:
+              value:
+                status: error
+                message: Failed to retrieve weather data
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          const: success
+        message:
+          type: string
+          const: Weather Information API is running
+    MessageResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          const: success
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          enum:
+            - fail
+            - error
+        message:
+          type: string
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          minLength: 1
+          description: Email-like login identifier. It is trimmed and normalized to lowercase.
+        password:
+          type: string
+          minLength: 8
+          writeOnly: true
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          minLength: 1
+          description: Email-like login identifier. It is trimmed and normalized to lowercase.
+        password:
+          type: string
+          minLength: 1
+          writeOnly: true
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - createdAt
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    UserResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          const: success
+        data:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+    LoginResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          const: success
+        data:
+          type: object
+          required:
+            - user
+            - accessToken
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+            accessToken:
+              type: string
+              description: HS256 JWT that expires one hour after issue.
+    Coordinates:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+    Temperature:
+      type: object
+      required:
+        - current
+        - feelsLike
+        - minimum
+        - maximum
+        - unit
+      properties:
+        current:
+          type: number
+        feelsLike:
+          type: number
+        minimum:
+          type: number
+        maximum:
+          type: number
+        unit:
+          type: string
+          const: celsius
+    Humidity:
+      type: object
+      required:
+        - value
+        - unit
+      properties:
+        value:
+          type: number
+        unit:
+          type: string
+          const: percent
+    WeatherConditions:
+      type: object
+      required:
+        - main
+        - description
+      properties:
+        main:
+          type:
+            - string
+            - "null"
+        description:
+          type:
+            - string
+            - "null"
+    Wind:
+      type: object
+      required:
+        - speed
+        - unit
+      properties:
+        speed:
+          type: number
+        unit:
+          type: string
+          const: meters_per_second
+    Weather:
+      type: object
+      required:
+        - city
+        - state
+        - country
+        - coordinates
+        - temperature
+        - humidity
+        - conditions
+        - wind
+      properties:
+        city:
+          type: string
+        state:
+          type:
+            - string
+            - "null"
+        country:
+          type: string
+        coordinates:
+          $ref: "#/components/schemas/Coordinates"
+        temperature:
+          $ref: "#/components/schemas/Temperature"
+        humidity:
+          $ref: "#/components/schemas/Humidity"
+        conditions:
+          $ref: "#/components/schemas/WeatherConditions"
+        wind:
+          $ref: "#/components/schemas/Wind"
+    WeatherResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          const: success
+        data:
+          $ref: "#/components/schemas/Weather"
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - city
+        - category
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type:
+            - string
+            - "null"
+        city:
+          type:
+            - string
+            - "null"
+        category:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - CHECKED
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type:
+            - string
+            - "null"
+        city:
+          type:
+            - string
+            - "null"
+        category:
+          type: string
+          description: Blank or omitted values are stored as `general`.
+    UpdateTaskRequest:
+      type: object
+      minProperties: 1
+      description: At least one recognized task field must be supplied.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type:
+            - string
+            - "null"
+        city:
+          type:
+            - string
+            - "null"
+        category:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          description: Case-insensitive value of pending or checked.
+    TaskResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          const: success
+        data:
+          type: object
+          required:
+            - task
+          properties:
+            task:
+              $ref: "#/components/schemas/Task"
+    TaskListResponse:
+      type: object
+      required:
+        - status
+        - results
+        - data
+      properties:
+        status:
+          type: string
+          const: success
+        results:
+          type: integer
+          minimum: 0
+        data:
+          type: object
+          required:
+            - tasks
+          properties:
+            tasks:
+              type: array
+              items:
+                $ref: "#/components/schemas/Task"

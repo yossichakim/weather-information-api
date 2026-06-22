@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safe Monorepo Refactor"
+  short_description: "Restructure repositories without behavior changes"
+  default_prompt: "Use $safe-monorepo-refactor to restructure this repository while preserving application behavior and validating every moved path."

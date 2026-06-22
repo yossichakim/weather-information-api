@@ -1,5 +1,7 @@
 import express from "express";
 
+import { mountOpenApiDocumentation } from "./docs/openapi.js";
+
 import weatherRoutes from "./routes/weather.routes.js";
 
 import authRoutes from "./routes/auth.routes.js";
@@ -16,6 +18,8 @@ app.get("/api/health", (req, res) => {
     message: "Weather Information API is running",
   });
 });
+
+mountOpenApiDocumentation(app);
 
 app.use("/api/weather", weatherRoutes);
 

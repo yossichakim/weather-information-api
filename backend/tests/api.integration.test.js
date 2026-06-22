@@ -6,6 +6,7 @@ import {
   expect,
   it,
 } from "vitest";
+import { parse } from "yaml";
 
 import app from "../src/app.js";
 import prisma from "../src/lib/prisma.js";
@@ -77,6 +78,38 @@ describe("Weather Information API integration tests", () => {
       status: "success",
       message: "Weather Information API is running",
     });
+  });
+
+  it("serves the Swagger UI and raw OpenAPI 3.1 document", async () => {
+    const swaggerResponse = await request(app).get("/api/docs/");
+
+    expect(swaggerResponse.status).toBe(200);
+    expect(swaggerResponse.type).toBe("text/html");
+    expect(swaggerResponse.text).toContain(
+      "Weather Information API Documentation"
+    );
+    expect(swaggerResponse.text).toContain(
+      '<div id="swagger-ui"></div>'
+    );
+
+    const openApiResponse = await request(app).get(
+      "/api/docs/openapi.yaml"
+    );
+
+    expect(openApiResponse.status).toBe(200);
+    expect(openApiResponse.type).toBe("application/yaml");
+
+    const openApiDocument = parse(openApiResponse.text);
+
+    expect(openApiDocument.openapi).toBe("3.1.0");
+    expect(openApiDocument.paths).toHaveProperty("/api/health");
+    expect(openApiDocument.paths).toHaveProperty(
+      "/api/auth/register"
+    );
+    expect(openApiDocument.paths).toHaveProperty(
+      "/api/weather/current"
+    );
+    expect(openApiDocument.paths).toHaveProperty("/api/tasks");
   });
 
   it("rejects access to protected task routes without a token", async () => {
