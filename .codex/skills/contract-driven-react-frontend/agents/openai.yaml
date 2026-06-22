@@ -1,0 +1,4 @@
+interface:
+  display_name: "Contract-Driven React Frontend"
+  short_description: "Build the verified React frontend from OpenAPI"
+  default_prompt: "Use $contract-driven-react-frontend to build or maintain the responsive React, Vite, and TypeScript frontend against the real backend API."
