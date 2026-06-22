@@ -29,3 +29,140 @@ Authorization: Bearer {{accessToken}}
 ### Logout user
 DELETE http://localhost:3000/api/auth/logout
 Authorization: Bearer {{accessToken}}
+
+### Create weather task
+POST http://localhost:3000/api/tasks
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "title": "Check weather for London",
+  "description": "Check the current temperature and weather conditions",
+  "city": "London",
+  "category": "travel"
+}
+
+### Login user
+# @name login
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "yossi@example.com",
+  "password": "StrongPassword123"
+}
+
+
+### Create weather task
+POST http://localhost:3000/api/tasks
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+{
+  "title": "Check weather for London",
+  "description": "Check the current temperature and weather conditions",
+  "city": "London",
+  "category": "travel"
+}
+
+
+### Get current authenticated user
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Logout user
+DELETE http://localhost:3000/api/auth/logout
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+### Get all tasks
+GET http://localhost:3000/api/tasks
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Get pending tasks
+GET http://localhost:3000/api/tasks?status=pending
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Get tasks by category
+GET http://localhost:3000/api/tasks?category=travel
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+### Create weather task
+# @name createTask
+POST http://localhost:3000/api/tasks
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+{
+  "title": "Check weather for London",
+  "description": "Check the current temperature and weather conditions",
+  "city": "London",
+  "category": "travel"
+}
+
+
+### Get all tasks
+GET http://localhost:3000/api/tasks
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Get pending tasks
+GET http://localhost:3000/api/tasks?status=pending
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Get tasks by category
+GET http://localhost:3000/api/tasks?category=travel
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Get created task by ID
+GET http://localhost:3000/api/tasks/{{createTask.response.body.$.data.task.id}}
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Update created task
+PATCH http://localhost:3000/api/tasks/{{createTask.response.body.$.data.task.id}}
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+{
+  "title": "Check updated weather for London",
+  "description": "Weather task updated successfully",
+  "status": "checked"
+}
+
+### Update task status and category
+PATCH http://localhost:3000/api/tasks/{{createTask.response.body.$.data.task.id}}
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+{
+  "status": "checked",
+  "category": "daily"
+}
+
+
+### Verify checked status filter
+GET http://localhost:3000/api/tasks?status=checked
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Verify daily category filter
+GET http://localhost:3000/api/tasks?category=daily
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+
+### Verify combined filters
+GET http://localhost:3000/api/tasks?status=checked&category=daily
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+### Delete created task
+DELETE http://localhost:3000/api/tasks/{{createTask.response.body.$.data.task.id}}
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
+
+### Verify non-matching filter
+GET http://localhost:3000/api/tasks?status=pending&category=travel
+Authorization: Bearer {{login.response.body.$.data.accessToken}}
