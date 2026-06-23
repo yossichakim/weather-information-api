@@ -7,8 +7,8 @@ info:
     management. Authenticated operations use short-lived bearer JWTs. Logging
     out revokes the presented token.
 servers:
-  - url: http://localhost:3000
-    description: Local development
+  - url: /
+    description: Current environment
 tags:
   - name: Health
   - name: Authentication
