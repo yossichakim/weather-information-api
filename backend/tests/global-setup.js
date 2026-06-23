@@ -18,6 +18,7 @@ export function setup() {
     env: {
       ...process.env,
       DATABASE_URL: testDatabaseUrl,
+      DIRECT_URL: testDatabaseUrl,
       SHADOW_DATABASE_URL: shadowDatabaseUrl,
     },
   });

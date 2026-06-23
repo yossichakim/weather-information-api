@@ -1,14 +1,36 @@
 import express from "express";
+import cors from "cors";
 
 import { mountOpenApiDocumentation } from "./docs/openapi.js";
-
 import weatherRoutes from "./routes/weather.routes.js";
-
 import authRoutes from "./routes/auth.routes.js";
-
 import taskRoutes from "./routes/task.routes.js";
 
 const app = express();
+
+const allowedOrigins = (
+  process.env.CORS_ORIGINS ?? "http://localhost:5173"
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      const error = new Error("Origin is not allowed by CORS");
+      error.statusCode = 403;
+      callback(error);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use(express.json());
 
@@ -22,25 +44,23 @@ app.get("/api/health", (req, res) => {
 mountOpenApiDocumentation(app);
 
 app.use("/api/weather", weatherRoutes);
-
 app.use("/api/auth", authRoutes);
-
 app.use("/api/tasks", taskRoutes);
 
 app.use((error, req, res, next) => {
-    console.error(error);
-  
-    res.status(error.statusCode || 500).json({
-      status: "error",
-      message: error.message || "Internal server error",
-    });
+  console.error(error);
+
+  res.status(error.statusCode || 500).json({
+    status: "error",
+    message: error.message || "Internal server error",
+  });
 });
 
 app.use((req, res) => {
-    res.status(404).json({
-      status: "fail",
-      message: "Route not found",
-    });
+  res.status(404).json({
+    status: "fail",
+    message: "Route not found",
+  });
 });
 
 export default app;
