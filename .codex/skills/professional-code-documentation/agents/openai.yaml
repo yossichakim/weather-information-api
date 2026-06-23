@@ -1,0 +1,4 @@
+interface:
+  display_name: "Professional Code Documentation"
+  short_description: "Document source code without changing behavior"
+  default_prompt: "Use $professional-code-documentation to inspect and document the requested source files with concise professional English comments, JSDoc, and TSDoc while preserving all executable behavior."

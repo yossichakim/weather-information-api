@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Documentation"
+  short_description: "Create verified, portfolio-ready project documentation"
+  default_prompt: "Use $portfolio-documentation to create or improve concise, professional, repository-verified documentation without changing application code."
