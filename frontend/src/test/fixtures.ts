@@ -23,6 +23,10 @@ export const testWeather: Weather = {
   wind: { speed: 4.1, unit: "meters_per_second" },
 };
 
+/**
+ * Produces contract-valid task data while allowing tests to vary only the
+ * fields relevant to a scenario.
+ */
 export function makeTask(overrides: Partial<Task> = {}): Task {
   return {
     id: 7,

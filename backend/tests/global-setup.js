@@ -1,6 +1,13 @@
 import "dotenv/config";
 import { execSync } from "node:child_process";
 
+/**
+ * Applies the tracked migrations to the isolated test database before Vitest
+ * imports application modules that initialize Prisma.
+ *
+ * Both Prisma connection variables point to the test database so migrations
+ * cannot target the development or production application database.
+ */
 export function setup() {
   const testDatabaseUrl = process.env.TEST_DATABASE_URL;
   const shadowDatabaseUrl = process.env.SHADOW_DATABASE_URL;

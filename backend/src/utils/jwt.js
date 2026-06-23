@@ -11,6 +11,10 @@ if (!jwtSecret) {
 
 const secretKey = new TextEncoder().encode(jwtSecret);
 
+/**
+ * Creates a one-hour HS256 access token with a unique identifier used for
+ * server-side revocation.
+ */
 export async function createAccessToken(user) {
   return new SignJWT({
     email: user.email,
@@ -26,6 +30,13 @@ export async function createAccessToken(user) {
     .sign(secretKey);
 }
 
+/**
+ * Verifies the token signature and validates the claims required by
+ * authentication and revocation checks.
+ *
+ * @throws {Error} When verification fails or required identity, token, or
+ * expiration claims are invalid.
+ */
 export async function verifyAccessToken(token) {
   const { payload } = await jwtVerify(token, secretKey, {
     algorithms: ["HS256"],

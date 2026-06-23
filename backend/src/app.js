@@ -18,6 +18,9 @@ const allowedOrigins = (
 app.use(
   cors({
     origin(origin, callback) {
+      // CORS is a browser-enforced policy, not authentication. Requests
+      // without an Origin header remain available to API tools, automated
+      // tests, and server-to-server clients.
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
         return;
@@ -47,6 +50,8 @@ app.use("/api/weather", weatherRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
+// Controllers and services forward operational failures here so the API uses
+// one JSON error envelope while preserving intentional status codes.
 app.use((error, req, res, next) => {
   console.error(error);
 
@@ -56,6 +61,8 @@ app.use((error, req, res, next) => {
   });
 });
 
+// Keep the route-not-found response separate from operational errors so an
+// unknown path is represented as a client failure rather than a server fault.
 app.use((req, res) => {
   res.status(404).json({
     status: "fail",

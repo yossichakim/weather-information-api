@@ -1,5 +1,9 @@
 import prisma from "../lib/prisma.js";
 
+/**
+ * Performs a read-only connectivity check and always closes the Prisma client
+ * so the diagnostic process can terminate cleanly.
+ */
 async function checkDatabaseConnection() {
   try {
     const userCount = await prisma.user.count();

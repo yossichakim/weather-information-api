@@ -15,6 +15,10 @@ export interface AuthContextValue {
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
+/**
+ * Returns the shared authentication state and fails fast when a component is
+ * rendered outside AuthProvider.
+ */
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within AuthProvider");

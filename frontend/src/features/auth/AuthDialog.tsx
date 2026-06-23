@@ -14,6 +14,11 @@ interface AuthDialogProps {
   onClose: () => void;
 }
 
+/**
+ * Presents login and registration in one accessible modal while preserving
+ * the contract difference: registration creates an account, whereas login
+ * creates the authenticated browser session.
+ */
 export function AuthDialog({
   open,
   initialMode = "login",
@@ -27,6 +32,8 @@ export function AuthDialog({
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Reopening the dialog must reflect the caller-selected mode and discard
+  // feedback from the previous interaction.
   useEffect(() => {
     if (open) {
       setMode(initialMode);

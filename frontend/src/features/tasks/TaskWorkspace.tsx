@@ -27,6 +27,13 @@ interface TaskWorkspaceProps {
   onRequestLogin: () => void;
 }
 
+/**
+ * Owns authenticated task state, filters, mutations, feedback, and edit/delete
+ * dialog coordination.
+ *
+ * Mutations refresh the server-owned list instead of applying optimistic local
+ * changes, keeping active filters and backend ordering authoritative.
+ */
 export function TaskWorkspace({ onRequestLogin }: TaskWorkspaceProps) {
   const { status } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -53,6 +60,8 @@ export function TaskWorkspace({ onRequestLogin }: TaskWorkspaceProps) {
     }
   }, [filters, status]);
 
+  // Changing authentication state or applied filters creates a new load
+  // callback and re-queries the authoritative task collection.
   useEffect(() => {
     void load();
   }, [load]);
@@ -136,6 +145,8 @@ export function TaskWorkspace({ onRequestLogin }: TaskWorkspaceProps) {
     setMutatingId(task.id);
     setError(null);
     try {
+      // Fetch the selected task again so the edit form opens with the latest
+      // ownership-checked server representation.
       const response = await getTask(task.id);
       setEditing(response.data.task);
     } catch (caught) {

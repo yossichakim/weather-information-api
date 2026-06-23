@@ -22,6 +22,10 @@ function hasOwn(object, property) {
   return Object.prototype.hasOwnProperty.call(object, property);
 }
 
+/**
+ * Validates and normalizes task input before creating a record for the
+ * authenticated user supplied by the bearer-token middleware.
+ */
 export async function createTask(req, res, next) {
   const body = req.body ?? {};
 
@@ -94,6 +98,10 @@ export async function createTask(req, res, next) {
   }
 }
 
+/**
+ * Lists only tasks owned by the authenticated user and translates optional
+ * HTTP query values into the service-layer filter shape.
+ */
 export async function getTasks(req, res, next) {
   if (
     req.query.status !== undefined &&
@@ -143,6 +151,11 @@ export async function getTasks(req, res, next) {
   }
 }
 
+/**
+ * Retrieves a task only when its identifier and authenticated owner match.
+ *
+ * Missing and cross-user resources share the same not-found response.
+ */
 export async function getTaskById(req, res, next) {
   const taskId = parseTaskId(req.params.id);
 
@@ -174,6 +187,10 @@ export async function getTaskById(req, res, next) {
   }
 }
 
+/**
+ * Builds a partial update from explicitly supplied fields and delegates the
+ * ownership-constrained mutation to the task service.
+ */
 export async function updateTask(req, res, next) {
   const taskId = parseTaskId(req.params.id);
 
@@ -299,6 +316,11 @@ export async function updateTask(req, res, next) {
   }
 }
 
+/**
+ * Deletes a task only when it belongs to the authenticated user.
+ *
+ * A task identifier alone does not grant access to the resource.
+ */
 export async function deleteTask(req, res, next) {
   const taskId = parseTaskId(req.params.id);
 

@@ -16,6 +16,10 @@ function renderApp() {
   );
 }
 
+/**
+ * Installs the minimum authenticated handlers needed after session restoration
+ * so authentication assertions are not coupled to task feature details.
+ */
 function authenticatedBaseHandlers() {
   server.use(
     http.get("/api/auth/me", () =>
@@ -109,6 +113,8 @@ describe("authentication flows", () => {
 
     renderApp();
 
+    // The protected 401 must clear persistent storage as well as returning the
+    // interface to its unauthenticated state.
     expect(
       await screen.findByRole("button", { name: "Sign in for tasks" }),
     ).toBeInTheDocument();
@@ -134,6 +140,8 @@ describe("authentication flows", () => {
     await user.click(within(dialog).getByRole("button", { name: "Create account" }));
 
     expect(await screen.findByText("Account created. You can sign in now.")).toBeInTheDocument();
+    // Registration returns a user but no token, so the client must not infer a
+    // session that the backend did not issue.
     expect(session.getToken()).toBeNull();
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "Sign in to operations" })).toBeInTheDocument(),

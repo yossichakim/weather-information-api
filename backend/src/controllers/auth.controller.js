@@ -6,6 +6,11 @@ import {
 
 import { createAccessToken } from "../utils/jwt.js";
 
+/**
+ * Validates registration input and delegates credential persistence to the
+ * authentication service. Registration creates an account but does not issue
+ * an access token.
+ */
 export async function register(req, res, next) {
   const email = req.body.email?.trim();
   const password = req.body.password;
@@ -38,6 +43,10 @@ export async function register(req, res, next) {
   }
 }
 
+/**
+ * Validates credentials, authenticates the user, and returns a newly signed
+ * bearer token without exposing the stored password hash.
+ */
 export async function login(req, res, next) {
   const email = req.body.email?.trim();
   const password = req.body.password;
@@ -65,6 +74,11 @@ export async function login(req, res, next) {
   }
 }
 
+/**
+ * Returns the identity attached by the authentication middleware.
+ *
+ * The response never accepts a user identifier from request input.
+ */
 export function getCurrentUser(req, res) {
   return res.status(200).json({
     status: "success",
@@ -74,6 +88,11 @@ export function getCurrentUser(req, res) {
   });
 }
 
+/**
+ * Revokes the bearer token presented on this request.
+ *
+ * Other tokens previously issued to the same user remain unaffected.
+ */
 export async function logout(req, res, next) {
   try {
     await revokeAccessToken(

@@ -13,6 +13,12 @@ interface ModalProps {
   className?: string;
 }
 
+/**
+ * Synchronizes declarative React state with the imperative HTML dialog API.
+ *
+ * Native cancel events are routed through `onClose`, and children are removed
+ * after closure so hidden forms and dialogs do not remain interactive.
+ */
 export function Modal({
   open,
   title,
