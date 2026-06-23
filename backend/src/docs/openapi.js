@@ -14,6 +14,10 @@ const swaggerOptions = {
   },
 };
 
+/**
+ * Mounts Swagger UI and a raw YAML endpoint backed by the repository's single
+ * OpenAPI source file.
+ */
 export function mountOpenApiDocumentation(app) {
   app.get("/api/docs/openapi.yaml", (req, res, next) => {
     try {

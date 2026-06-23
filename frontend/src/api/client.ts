@@ -8,6 +8,10 @@ const API_BASE_URL = (
 
 let unauthorizedHandler: (() => void) | null = null;
 
+/**
+ * Registers the authentication-state callback invoked when a protected
+ * request proves that the stored bearer token is no longer usable.
+ */
 export function setUnauthorizedHandler(handler: (() => void) | null): void {
   unauthorizedHandler = handler;
 }
@@ -18,12 +22,23 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
 }
 
 async function parseBody(response: Response): Promise<unknown> {
+  // Successful deletes and non-JSON responses do not have a body that callers
+  // can safely parse as the API contract.
   if (response.status === 204) return undefined;
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) return undefined;
   return response.json();
 }
 
+/**
+ * Sends requests through the configured API base and centralizes JSON
+ * serialization, bearer authorization, response parsing, and error
+ * normalization.
+ *
+ * Authenticated 401 responses clear persisted credentials before notifying
+ * the authentication context, preventing later requests from reusing a token
+ * the backend has rejected.
+ */
 export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},

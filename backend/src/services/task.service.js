@@ -11,6 +11,10 @@ const taskSelect = {
   updatedAt: true,
 };
 
+/**
+ * Creates a task owned by the authenticated user identifier supplied by the
+ * controller.
+ */
 export async function createTaskForUser(userId, taskData) {
   return prisma.task.create({
     data: {
@@ -24,6 +28,10 @@ export async function createTaskForUser(userId, taskData) {
   });
 }
 
+/**
+ * Returns tasks scoped to one owner, with optional status and category
+ * filters applied in the database query.
+ */
 export async function getTasksForUser(userId, filters = {}) {
   const where = {
     userId,
@@ -46,6 +54,12 @@ export async function getTasksForUser(userId, filters = {}) {
   });
 }
 
+/**
+ * Retrieves a task only when both its identifier and owner match.
+ *
+ * Applying both predicates prevents a task identifier from acting as an
+ * authorization credential.
+ */
 export async function getTaskByIdForUser(userId, taskId) {
   return prisma.task.findFirst({
     where: {
@@ -56,6 +70,13 @@ export async function getTaskByIdForUser(userId, taskId) {
   });
 }
 
+/**
+ * Updates an owned task and returns null when the task is missing or belongs
+ * to another user.
+ *
+ * The indistinguishable result preserves the controller's not-found boundary
+ * for both cases.
+ */
 export async function updateTaskForUser(userId, taskId, taskData) {
   const updateResult = await prisma.task.updateMany({
     where: {
@@ -72,6 +93,9 @@ export async function updateTaskForUser(userId, taskId, taskData) {
   return getTaskByIdForUser(userId, taskId);
 }
 
+/**
+ * Deletes a task only when both the task identifier and owner match.
+ */
 export async function deleteTaskForUser(userId, taskId) {
   const deleteResult = await prisma.task.deleteMany({
     where: {

@@ -9,6 +9,10 @@ import { makeTask, testUser } from "../../test/fixtures";
 import type { Task } from "../../types/api";
 import { TaskWorkspace } from "./TaskWorkspace";
 
+/**
+ * Restores an authenticated session before rendering the workspace so each
+ * test can focus on task behavior rather than repeating auth setup.
+ */
 function renderWorkspace() {
   session.setToken("valid-token");
   server.use(
@@ -24,6 +28,8 @@ function renderWorkspace() {
 }
 
 describe("task workspace", () => {
+  // Handlers mutate this in-memory collection to model the backend-owned list
+  // that the workspace reloads after successful mutations.
   let tasks: Task[];
 
   beforeEach(() => {
@@ -113,6 +119,8 @@ describe("task workspace", () => {
       ),
       http.patch("/api/tasks/:id", async ({ request }) => {
         const input = (await request.json()) as { status: string };
+        // The UI consumes uppercase response enums but the API contract accepts
+        // lowercase values for mutation requests.
         expect(input.status).toBe("checked");
         tasks = [{ ...tasks[0], status: "CHECKED" }];
         return HttpResponse.json({ status: "success", data: { task: tasks[0] } });
@@ -255,6 +263,8 @@ describe("task workspace", () => {
 
     renderWorkspace();
 
+    // A task request can discover revocation after initial restoration; the
+    // shared API client must invalidate the whole frontend session.
     expect(
       await screen.findByRole("button", { name: "Sign in for tasks" }),
     ).toBeInTheDocument();

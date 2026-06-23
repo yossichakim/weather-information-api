@@ -6,6 +6,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
+/**
+ * Provides consistent visual variants and prevents duplicate actions while an
+ * asynchronous operation is busy.
+ */
 export function Button({
   variant = "primary",
   busy = false,

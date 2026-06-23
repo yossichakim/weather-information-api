@@ -6,6 +6,10 @@ import { useAuth } from "./features/auth/auth-state";
 import { TaskWorkspace } from "./features/tasks/TaskWorkspace";
 import { WeatherWorkspace } from "./features/weather/WeatherWorkspace";
 
+/**
+ * Composes the public weather workspace with the authenticated task workspace
+ * and coordinates application-level authentication dialogs and notices.
+ */
 export default function App() {
   const { user, status, message, clearMessage, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);

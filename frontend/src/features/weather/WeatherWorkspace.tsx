@@ -19,6 +19,10 @@ function temperature(value: number): string {
   return `${Math.round(value)}°`;
 }
 
+/**
+ * Manages the public current-weather search workflow and its initial, loading,
+ * success, not-found, provider-error, and retry states.
+ */
 export function WeatherWorkspace() {
   const [city, setCity] = useState("");
   const [lastCity, setLastCity] = useState("");
@@ -26,6 +30,8 @@ export function WeatherWorkspace() {
   const [error, setError] = useState<ApiError | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Retaining the last normalized city supports a deterministic retry after a
+  // failed request without depending on subsequent input edits.
   const search = async (requestedCity: string) => {
     const trimmed = requestedCity.trim();
     if (!trimmed) {

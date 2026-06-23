@@ -17,6 +17,10 @@ function bearerToken(token) {
   return `Bearer ${token}`;
 }
 
+/**
+ * Creates an isolated account and returns the real token issued by the
+ * authentication stack so protected-route tests exercise JWT verification.
+ */
 async function registerAndLogin(email) {
   const registerResponse = await request(app)
     .post("/api/auth/register")
@@ -45,6 +49,10 @@ async function registerAndLogin(email) {
   };
 }
 
+/**
+ * Creates an owned task through the public API while allowing each scenario
+ * to override only the fields relevant to its regression case.
+ */
 async function createTask(token, taskData = {}) {
   return request(app)
     .post("/api/tasks")
@@ -58,6 +66,8 @@ async function createTask(token, taskData = {}) {
     });
 }
 
+// Delete dependent records in ownership order so every test starts without
+// users, tasks, or revoked-token state from a previous scenario.
 beforeEach(async () => {
   await prisma.revokedToken.deleteMany();
   await prisma.task.deleteMany();
@@ -150,6 +160,8 @@ describe("Weather Information API integration tests", () => {
       message: "Logged out successfully",
     });
 
+    // Reusing the same signed token verifies server-side revocation rather
+    // than only the client's ability to discard local session data.
     const revokedTokenResponse = await request(app)
       .get("/api/auth/me")
       .set("Authorization", bearerToken(token));
@@ -353,6 +365,8 @@ describe("Weather Information API integration tests", () => {
     expect(secondUserTasksResponse.status).toBe(200);
     expect(secondUserTasksResponse.body.results).toBe(0);
 
+    // Read, update, and delete must all apply the authenticated owner
+    // predicate; a valid task identifier alone must never grant access.
     const unauthorizedReadResponse = await request(app)
       .get(`/api/tasks/${taskId}`)
       .set(

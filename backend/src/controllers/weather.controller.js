@@ -1,5 +1,9 @@
 import { getCurrentWeatherByCity } from "../services/weather.service.js";
 
+/**
+ * Validates the public city query and returns the provider-independent weather
+ * representation produced by the weather service.
+ */
 export async function getCurrentWeather(req, res, next) {
   const city = req.query.city?.trim();
 

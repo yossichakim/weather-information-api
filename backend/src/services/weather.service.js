@@ -11,6 +11,13 @@ function createServiceError(message, statusCode) {
   return error;
 }
 
+/**
+ * Resolves a city through OpenWeatherMap geocoding and then requests current
+ * metric weather for the resulting coordinates.
+ *
+ * Provider failures are translated into application errors with HTTP status
+ * metadata, while the API key remains server-side in the environment.
+ */
 export async function getCurrentWeatherByCity(city) {
   const apiKey = process.env.OPENWEATHER_API_KEY;
 
@@ -44,6 +51,8 @@ export async function getCurrentWeatherByCity(city) {
 
   const location = locations[0];
 
+  // The second provider request uses coordinates from geocoding instead of
+  // forwarding an ambiguous city name to the current-weather endpoint.
   const weatherUrl = new URL(CURRENT_WEATHER_API_URL);
 
   weatherUrl.searchParams.set("lat", location.lat);

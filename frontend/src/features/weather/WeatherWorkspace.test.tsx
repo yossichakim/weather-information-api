@@ -11,6 +11,8 @@ describe("weather workspace", () => {
     const user = userEvent.setup();
     server.use(
       http.get("/api/weather/current", async () => {
+        // The delay keeps the request pending long enough to assert the
+        // user-visible loading state before the success response arrives.
         await delay(100);
         return HttpResponse.json({ status: "success", data: testWeather });
       }),
@@ -58,6 +60,8 @@ describe("weather workspace", () => {
     await user.type(screen.getByLabelText("Search by city"), "Atlantis");
     await user.click(screen.getByRole("button", { name: "Search weather" }));
 
+    // A provider-level not-found response has a distinct recovery path from
+    // network and server failures.
     expect(await screen.findByText("City not found.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry Atlantis" })).toBeInTheDocument();
   });

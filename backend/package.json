@@ -4,19 +4,25 @@
   "description": "RESTful API for real-time weather data and weather task management",
   "main": "src/server.js",
   "scripts": {
+    "build": "prisma generate",
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "node src/server.js",
+    "start:production": "prisma migrate deploy && node src/server.js",
     "dev": "nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
+  "engines": {
+  "node": ">=24.0.0 <25.0.0"
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jose": "^6.2.3",

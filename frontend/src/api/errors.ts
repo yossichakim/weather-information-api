@@ -7,6 +7,10 @@ export type ApiErrorKind =
   | "network"
   | "unknown";
 
+/**
+ * Represents transport and API failures in a form feature components can map
+ * to user-facing states without understanding backend response details.
+ */
 export class ApiError extends Error {
   readonly status: number | null;
   readonly kind: ApiErrorKind;
@@ -28,6 +32,10 @@ function kindForStatus(status: number): ApiErrorKind {
   return "unknown";
 }
 
+/**
+ * Preserves known API failures and translates browser network errors and
+ * unexpected thrown values into the shared error model.
+ */
 export function normalizeApiError(
   error: unknown,
   fallback = "The request could not be completed.",
@@ -46,6 +54,9 @@ export function normalizeApiError(
   return new ApiError(fallback, null, "unknown");
 }
 
+/**
+ * Converts an unsuccessful HTTP response into the shared error taxonomy.
+ */
 export function createResponseError(
   status: number,
   message?: string,

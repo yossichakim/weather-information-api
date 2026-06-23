@@ -4,6 +4,12 @@ import prisma from "../lib/prisma.js";
 
 const PASSWORD_SALT_ROUNDS = 12;
 
+/**
+ * Creates a user with a normalized email address and a bcrypt password hash.
+ *
+ * @throws {Error} With status code 409 when the normalized email already
+ * exists.
+ */
 export async function registerUser(email, password) {
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -38,6 +44,13 @@ export async function registerUser(email, password) {
   });
 }
 
+/**
+ * Verifies credentials and returns only the public user fields needed by the
+ * token and response layers.
+ *
+ * Missing users and invalid passwords intentionally share one error response
+ * to avoid disclosing account existence.
+ */
 export async function loginUser(email, password) {
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -73,6 +86,11 @@ export async function loginUser(email, password) {
   };
 }
 
+/**
+ * Persists the presented JWT identifier until its original expiration time.
+ *
+ * The upsert makes repeated logout attempts idempotent for the same token.
+ */
 export async function revokeAccessToken(
   userId,
   tokenId,

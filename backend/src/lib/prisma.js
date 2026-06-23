@@ -5,6 +5,8 @@ import { PrismaClient } from "../../generated/prisma/client.ts";
 
 const connectionString = process.env.DATABASE_URL;
 
+// Fail during module initialization rather than allowing requests to reach an
+// application that cannot access its persistence layer.
 if (!connectionString) {
   throw new Error("DATABASE_URL is not configured");
 }

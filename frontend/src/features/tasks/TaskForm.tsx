@@ -10,6 +10,12 @@ interface TaskFormProps {
   onCancel?: () => void;
 }
 
+/**
+ * Normalizes task form values for both create and edit workflows.
+ *
+ * When the selected task changes, the effect replaces local draft state with
+ * the server-owned values used by the edit dialog.
+ */
 export function TaskForm({ task, busy, onSubmit, onCancel }: TaskFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -44,6 +50,8 @@ export function TaskForm({ task, busy, onSubmit, onCancel }: TaskFormProps) {
       category: category.trim() || "general",
     });
     if (!task) {
+      // Create mode clears the draft only after the parent mutation resolves;
+      // edit mode remains populated until its dialog closes.
       setTitle("");
       setDescription("");
       setCity("");
