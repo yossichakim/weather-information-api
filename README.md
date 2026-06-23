@@ -1,24 +1,48 @@
-# Atmospheric Operations
+# Weather Information API
 
-Atmospheric Operations is a full-stack weather and task management application that combines public current-weather search with a private, user-scoped planning workspace. The project demonstrates a contract-driven React frontend, a layered Express API, JWT authentication with server-side revocation, PostgreSQL persistence through Prisma, external weather integration, automated testing, and a Render deployment backed by Neon.
+### Atmospheric Operations  Full-Stack Weather and Task Management Platform
 
-**Live links**
+Search current weather by city, then use an authenticated workspace to create and manage private weather-related tasks. The project demonstrates a complete full-stack architecture with authentication, PostgreSQL persistence, automated testing, OpenAPI documentation, and production deployment.
 
-- Frontend application: `<FRONTEND_URL>`
-- [Backend API](https://weather-information-api-backend.onrender.com)
-- [Swagger UI](https://weather-information-api-backend.onrender.com/api/docs)
-- [Health endpoint](https://weather-information-api-backend.onrender.com/api/health)
+## Live Links
 
-The frontend URL above is the deployment placeholder supplied for this repository. Replace it with the final Render Static Site URL when available.
+- [Live Application](https://weather-information-api-frontend.onrender.com)
+- [Swagger API Documentation](https://weather-information-api-backend.onrender.com/api/docs)
+- [Health Check](https://weather-information-api-backend.onrender.com/api/health)
 
-## Main Features
+## Key Capabilities
 
-- Search current weather by city, including temperature, humidity, conditions, and wind.
-- Register, sign in, restore a session, and sign out with bearer-token authentication.
-- Create, view, edit, complete, delete, and filter personal tasks.
-- Keep task reads and mutations scoped to the authenticated user.
-- Revoke the active access token on logout and reject revoked tokens on later requests.
-- Present responsive loading, empty, success, validation, authentication, and provider-error states.
+- Look up current weather by city, including temperature, feels-like temperature, humidity, conditions, wind, and resolved location details.
+- Register, sign in, restore a stored session, and log out with server-side token revocation.
+- Create, edit, mark pending or complete, delete, and filter personal tasks by status and category.
+- Isolate every authenticated task query and mutation to the task owner.
+- Present responsive loading, empty, success, validation, authentication, and weather-provider error states.
+
+## What This Project Demonstrates
+
+- REST API design with an implementation-aligned OpenAPI 3.1 contract.
+- Layered Express boundaries across routes, middleware, controllers, services, and Prisma data access.
+- JWT bearer authentication with `jose`, bcrypt password hashing, authenticated identity retrieval, and database-backed token revocation.
+- User-scoped authorization enforced within task database queries.
+- OpenWeatherMap geocoding and current-weather integration.
+- PostgreSQL persistence, Prisma migrations, and the Prisma PostgreSQL adapter.
+- Centralized frontend API communication with bearer-token injection, session restoration, API error normalization, and task status mapping.
+- Automated backend integration tests and frontend behavior tests.
+- Render frontend and backend deployment with Neon PostgreSQL and environment-based CORS configuration.
+
+## Production Architecture
+
+```text
+Browser
+   -> React frontend on Render Static Site
+   -> Express API on Render Web Service
+      -> OpenWeatherMap
+      -> Neon PostgreSQL through Prisma
+```
+
+The browser loads the React frontend from Render and communicates with the Express API. The backend handles authentication, weather, and task operations; OpenWeatherMap supplies weather data, while Neon PostgreSQL stores users, tasks, and revoked token identifiers.
+
+[Architecture documentation](docs/architecture.md)
 
 ## Technology Stack
 
@@ -26,112 +50,85 @@ The frontend URL above is the deployment placeholder supplied for this repositor
 | --- | --- |
 | Frontend | React 19, Vite, TypeScript, native `fetch`, custom CSS |
 | Backend | Node.js 24, Express 5, ES modules |
-| Authentication | JWT bearer tokens with `jose`, bcrypt password hashing, database-backed revocation |
+| Authentication | `jose`, JWT bearer tokens, bcrypt, database-backed revocation |
 | Data | PostgreSQL, Prisma ORM, Prisma PostgreSQL adapter |
-| External service | OpenWeatherMap geocoding and current-weather APIs |
+| External provider | OpenWeatherMap |
 | API documentation | OpenAPI 3.1, Swagger UI |
 | Testing | Vitest, Supertest, React Testing Library, MSW |
-| Production | Render Static Site, Render Web Service, Neon PostgreSQL |
+| Deployment | Render Static Site, Render Web Service, Neon PostgreSQL |
 
-## Production Architecture
+## Testing and Quality
 
-The browser loads the React application from a Render Static Site. Its centralized API client calls the Express Web Service, which validates the configured CORS allowlist and handles authentication, weather, and task requests. Weather lookups use OpenWeatherMap; users, tasks, and revoked token identifiers are stored in Neon PostgreSQL through Prisma.
+The current test source contains 9 backend integration test cases and 18 frontend test cases covering authentication, authorization boundaries, task workflows, weather states, session behavior, and API error handling.
 
-See [Architecture](docs/architecture.md) for request flows and security boundaries, and [Deployment](docs/deployment.md) for production configuration and operations.
+The project validation workflow also includes frontend linting, TypeScript checking, and production build validation.
 
-## Repository Structure
-
-```text
-backend/   Express API, Prisma schema and migrations, OpenAPI, integration tests
-frontend/  React application, API client, feature modules, behavior tests
-docs/      Architecture, deployment, and execution-plan documentation
-```
-
-## Local Setup
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 24
+- Node.js 24 (`>=24.0.0 <25.0.0`)
 - PostgreSQL
-- An OpenWeatherMap API key
+- OpenWeatherMap API key
 
 ### Backend
 
-From `backend/`:
-
 ```bash
+cd backend
 npm install
 npm run build
 npx prisma migrate deploy
 npm run dev
 ```
 
-Create `backend/.env` from `backend/.env.example` and provide local values:
+Copy `backend/.env.example` to `backend/.env`, provide local development values, and never commit the real file.
 
 | Variable | Purpose |
 | --- | --- |
-| `PORT` | HTTP port; defaults to `3000` |
-| `OPENWEATHER_API_KEY` | Server-side OpenWeatherMap credential |
-| `JWT_SECRET` | Secret used to sign and verify access tokens |
-| `DATABASE_URL` | Runtime PostgreSQL connection used by the application |
-| `DIRECT_URL` | Direct PostgreSQL connection used by Prisma migrations |
-| `CORS_ORIGINS` | Comma-separated browser origins allowed by the API |
-| `TEST_DATABASE_URL` | Isolated PostgreSQL database used by backend tests |
-| `SHADOW_DATABASE_URL` | PostgreSQL shadow database available to Prisma tooling |
-
-Use placeholders or local development credentials only. Never commit the real file.
-
-The `build` script generates Prisma Client. `prisma migrate deploy` applies the tracked PostgreSQL migration through `DIRECT_URL`; the running API uses `DATABASE_URL`.
+| `PORT` | Local API port |
+| `OPENWEATHER_API_KEY` | Server-side weather provider credential |
+| `JWT_SECRET` | Access-token signing and verification secret |
+| `DATABASE_URL` | Runtime PostgreSQL connection |
+| `DIRECT_URL` | Direct PostgreSQL migration connection |
+| `CORS_ORIGINS` | Comma-separated allowed browser origins |
+| `TEST_DATABASE_URL` | Isolated backend test database |
+| `SHADOW_DATABASE_URL` | Prisma shadow database |
 
 ### Frontend
 
-From `frontend/`:
-
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
 
-Create `frontend/.env` from `frontend/.env.example` when an override is needed:
-
-| Variable | Purpose |
-| --- | --- |
-| `VITE_API_BASE_URL` | API prefix or absolute API base; defaults to `/api` |
-
-Local Vite development proxies `/api` to `http://localhost:3000`, so the default works when both applications run locally.
+Copy `frontend/.env.example` to `frontend/.env` only when an API-base override is needed. `VITE_API_BASE_URL` defaults to `/api`, and local Vite development proxies `/api` to `http://localhost:3000`.
 
 ## Validation
 
-Run backend integration tests from `backend/`:
+Backend:
 
 ```bash
+cd backend
 npm test
 ```
 
-Run frontend static checks, behavior tests, and the production build from `frontend/`:
+Frontend:
 
 ```bash
+cd frontend
 npm run lint
 npm run typecheck
 npm test
 npm run build
 ```
 
-## API Documentation
+## Technical Documentation
 
-- [Interactive Swagger UI](https://weather-information-api-backend.onrender.com/api/docs)
+- [Architecture](docs/architecture.md)
+- [Deployment](docs/deployment.md)
 - [OpenAPI source](backend/openapi.yaml)
+- [Live Swagger UI](https://weather-information-api-backend.onrender.com/api/docs)
+- [Live health endpoint](https://weather-information-api-backend.onrender.com/api/health)
 
-Swagger and `backend/openapi.yaml` are the endpoint-level contract. This README intentionally does not duplicate request and response schemas.
-
-## Engineering Highlights
-
-- Designed a REST API with implementation-aligned OpenAPI 3.1 documentation.
-- Preserved clear route, middleware, controller, service, and Prisma data-access boundaries.
-- Integrated OpenWeatherMap through server-side geocoding and current-weather requests.
-- Implemented password hashing, one-hour JWT access tokens, authenticated identity retrieval, and token revocation.
-- Enforced task ownership in database queries for list, read, update, and delete operations.
-- Managed PostgreSQL schema history with Prisma migrations and separate runtime and migration connections.
-- Tested API behavior with Vitest and Supertest and frontend workflows with Vitest, React Testing Library, and MSW.
-- Centralized frontend transport, bearer authorization, session restoration, error normalization, and task status mapping.
-- Configured separate frontend and backend production services with environment-based CORS and startup migrations.
+Swagger UI and `backend/openapi.yaml` are the source of truth for endpoint-level request and response contracts.
