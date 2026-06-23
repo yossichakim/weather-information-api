@@ -1,16 +1,24 @@
+import "dotenv/config";
 import { execSync } from "node:child_process";
 
-const TEST_DATABASE_URL = "file:./prisma/test.db";
-
 export function setup() {
-  execSync(
-    `npx prisma db push --force-reset --url "${TEST_DATABASE_URL}"`,
-    {
-      stdio: "inherit",
-      env: {
-        ...process.env,
-        DATABASE_URL: TEST_DATABASE_URL,
-      },
-    }
-  );
+  const testDatabaseUrl = process.env.TEST_DATABASE_URL;
+  const shadowDatabaseUrl = process.env.SHADOW_DATABASE_URL;
+
+  if (!testDatabaseUrl) {
+    throw new Error("TEST_DATABASE_URL is not configured");
+  }
+
+  if (!shadowDatabaseUrl) {
+    throw new Error("SHADOW_DATABASE_URL is not configured");
+  }
+
+  execSync("npx prisma migrate deploy", {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      DATABASE_URL: testDatabaseUrl,
+      SHADOW_DATABASE_URL: shadowDatabaseUrl,
+    },
+  });
 }

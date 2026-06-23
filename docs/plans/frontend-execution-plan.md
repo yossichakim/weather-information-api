@@ -2,7 +2,7 @@
 
 ## Current State
 
-- The repository contains a completed Express, Prisma, SQLite, JWT, weather, and task backend under `backend/`.
+- The repository contains a completed Express, Prisma, PostgreSQL, JWT, weather, and task backend under `backend/`.
 - `backend/openapi.yaml` is the verified OpenAPI 3.1 source of truth.
 - The backend exposes public authentication and current-weather endpoints plus bearer-protected task CRUD.
 - The backend does not configure browser CORS, so local frontend development must use a Vite `/api` proxy.

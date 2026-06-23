@@ -20,7 +20,7 @@ The project must demonstrate:
 
 The intended repository structure is:
 
-- `backend/` for the Express, Prisma, SQLite, authentication, weather, task, and API test code
+- `backend/` for the Express, Prisma, PostgreSQL, authentication, weather, task, and API test code
 - `frontend/` for the responsive web application
 - `docs/` for concise technical documentation
 - `README.md` for the public portfolio overview
@@ -52,7 +52,7 @@ The backend uses:
 - Express
 - ES modules
 - Prisma
-- SQLite
+- PostgreSQL
 - JWT authentication
 - Vitest
 - Supertest
