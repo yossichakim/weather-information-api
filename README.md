@@ -10,6 +10,10 @@ Search current weather by city, then use an authenticated workspace to create an
 - [Swagger API Documentation](https://weather-information-api-backend.onrender.com/api/docs)
 - [Health Check](https://weather-information-api-backend.onrender.com/api/health)
 
+## Project Preview
+
+[![Weather Information API dashboard](docs/images/weather-information-preview.png)](https://weather-information-api-frontend.onrender.com)
+
 ## Key Capabilities
 
 - Look up current weather by city, including temperature, feels-like temperature, humidity, conditions, wind, and resolved location details.
